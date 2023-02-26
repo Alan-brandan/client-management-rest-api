@@ -6,11 +6,11 @@
 <h2>✨ Features</h2>
 
 *   Get a list of clients given a name or a ID number
-*   Create a new client with a main adress
-*   Edit a client properties
+*   Create a new client with a main address
+*   Edit a client's attributes
 *   Delete a client
-*   Create aditional Adresses for a given client
-*   Get all registered adresses for a given client
+*   Create aditional addresses for a given client
+*   Get all registered addresses for a given client
   
 <h2>💻 Technologies</h2>
 
@@ -52,9 +52,9 @@ PUT /clientes
 DELETE /clientes/{id}
 ```
 ```bash
-# Return all registered adresses -> client's id
+# Return all registered addresses -> client's id
 GET /direcciones/{id}
 
-# Create an adittional adress -> client's id
+# Create an adittional address -> client's id
 POST /direcciones/{id}
 ```
