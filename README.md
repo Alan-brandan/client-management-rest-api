@@ -1,7 +1,6 @@
 <h1 align="center" id="title">🍃 Spring boot REST API Crud 🍃</h1>
 
-<p id="description"> implementation of a basic CRUD using RESTful principles.</p>
-
+<p id="description"> RESTful API for CRUD operations, developed with Spring Boot in Java.</p>
   
 <h2>✨ Features</h2>
 
@@ -16,6 +15,7 @@
 
 *   Spring Boot
 *   Spring Data JPA
+*   Hibernate
 *   PostgreSQL Database
 
 <h2>🛠️ Database configuration:</h2>
@@ -36,25 +36,25 @@ spring.datasource.password=password
 # Return all registered clients
 GET /clientes
 
-# Return a specific user -> id
+# Return a specific user by id
 GET /clientes/{id}
 
-# Return a list of clients -> name
+# Return a list of clients by name
 GET /clientes/{name}
 
-# Create a client -> client
+# Create a client
 POST /clientes
 
-# Update a client -> client
+# Update a client
 PUT /clientes
 
-# Delete a client -> id
+# Delete a client by id
 DELETE /clientes/{id}
 ```
 ```bash
-# Return all registered addresses -> client's id
+# Return all registered addresses by client's id
 GET /direcciones/{id}
 
-# Create an adittional address -> client's id
+# Create an adittional address by client's id
 POST /direcciones/{id}
 ```
