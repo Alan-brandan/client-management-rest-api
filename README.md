@@ -1,6 +1,6 @@
-<h1 align="center" id="title">🍃 Spring boot REST API Crud 🍃</h1>
+<h1 align="center" id="title">🍃 Client Management System REST API 🍃</h1>
 
-<p id="description"> RESTful API for CRUD operations, developed with Spring Boot in Java.</p>
+<p id="description"> RESTful API for a client management system .developed with Spring Boot in Java.</p>
   
 <h2>✨ Features</h2>
 
