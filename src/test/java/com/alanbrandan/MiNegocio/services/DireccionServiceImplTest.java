@@ -3,6 +3,7 @@ package com.alanbrandan.MiNegocio.services;
 import com.alanbrandan.MiNegocio.domain.Cliente;
 import com.alanbrandan.MiNegocio.domain.Direccion;
 import com.alanbrandan.MiNegocio.repository.ClienteRepository;
+import com.alanbrandan.MiNegocio.services.interfaces.DireccionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,7 +55,7 @@ class DireccionServiceImplTest {
         ResponseEntity<?> result = direccionService.crearDireccion(cliente1.getId(),nueva);
 
         assertEquals(HttpStatus.OK,result.getStatusCode());
-        assertEquals("se registro una nueva direccion para el cliente con el id:" + cliente1.getId(),result.getBody());
+        assertEquals("se registro una nueva direccion para el cliente con el id: " + cliente1.getId(),result.getBody());
 
     }
 
@@ -74,16 +75,17 @@ class DireccionServiceImplTest {
     @Test
     void obtenerDirecciones_PassingValidID() {
         when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente1));
+        ResponseEntity<?> result = direccionService.obtenerDirecciones(cliente1.getId());
 
-        List<Direccion> result = direccionService.obtenerDirecciones(cliente1.getId());
-        assertEquals(3,result.size());
+        //assertEquals(HttpStatus.OK,result.getStatusCode());
+        assertEquals(3,((List<Direccion>)result.getBody()).size());
     }
 
     @Test
-    void obtenerDirecciones_PssingInvalidID() {
-        Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                direccionService.obtenerDirecciones(cliente1.getId())
-        );
-        assertEquals("no existe un cliente con el id: " + cliente1.getId(), exception.getMessage());
+    void obtenerDirecciones_PassingInvalidID() {
+        ResponseEntity<?> result = direccionService.obtenerDirecciones(cliente1.getId());
+
+        assertEquals(HttpStatus.BAD_REQUEST,result.getStatusCode());
+        assertEquals("no existe un cliente con el id: " + cliente1.getId(),result.getBody());
     }
 }

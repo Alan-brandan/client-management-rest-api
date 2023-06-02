@@ -3,15 +3,14 @@ package com.alanbrandan.MiNegocio.services;
 import com.alanbrandan.MiNegocio.domain.Cliente;
 import com.alanbrandan.MiNegocio.domain.Direccion;
 import com.alanbrandan.MiNegocio.repository.ClienteRepository;
-import org.aspectj.lang.annotation.Before;
+import com.alanbrandan.MiNegocio.services.interfaces.ClienteService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.ResponseEntity;
 
 import java.util.*;
 
@@ -73,43 +72,35 @@ class ClienteServiceImplTest {
     }
 
     @Test
-    void obtenerClientes() {
-        when(clienteRepository.findAll()).thenReturn(listaclientes);
-        List<Cliente> encontrados = clienteService.obtenerClientes();
+    void obtenerClientesFiltrados_NoParams() {
+        when(clienteRepository.getClientesFiltrados(any(), any())).thenReturn(listaclientes);
+        ResponseEntity<?> encontrados = clienteService.getClientesFiltrados(null, null);
         assertNotNull(encontrados);
-        assertEquals(2,encontrados.size());
+        assertEquals(2,((List<Cliente>)encontrados.getBody()).size());
     }
 
     @Test
-    void obtenerClientesConParam_PassingValidID() {
-        when(clienteRepository.findByNumeroIdentificacionLikeIgnoreCase(anyString())).thenReturn(cliente2);
-        List<Cliente> encontrado = clienteService.obtenerClientesConParam("","1223478");
-        assertEquals("1223478",encontrado.get(0).getNumeroIdentificacion());
+    void obtenerClientesFiltrados_PassingValidID() {
+        when(clienteRepository.getClientesFiltrados(any(),anyString())).thenReturn(new ArrayList<>(Arrays.asList(cliente2)));
+        ResponseEntity<?> encontrado = clienteService.getClientesFiltrados(null,"1223478");
+        assertEquals("1223478",((List<Cliente>)encontrado.getBody()).get(0).getNumeroIdentificacion());
     }
     @Test
-    void obtenerClientesConParam_PassingValidName() {
+    void obtenerClientesFiltrados_PassingValidName() {
         List<Cliente> nueva = new ArrayList<>(Collections.singletonList(cliente2));
-        when(clienteRepository.findByNombresLikeIgnoreCase(anyString())).thenReturn(nueva);
-        List<Cliente> encontrado = clienteService.obtenerClientesConParam("Jane Doe","");
-        assertTrue(encontrado.contains(cliente2));
+        when(clienteRepository.getClientesFiltrados(anyString(),any())).thenReturn(nueva);
+        ResponseEntity<?> encontrado = clienteService.getClientesFiltrados("Jane Doe",null);
+        assertEquals("1223478",((List<Cliente>)encontrado.getBody()).get(0).getNumeroIdentificacion() );
     }
     @Test
-    void obtenerClientesConParam_PassingNoParam() {
-        Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                clienteService.obtenerClientesConParam("","")
-        );
-        assertEquals("no se encontro clientes con ese nombre/numero de identificacion", exception.getMessage());
-    }
-    @Test
-    void obtenerClientesConParam_PassingBothNameAndId() {
-        when(clienteRepository.findByNumeroIdentificacionLikeIgnoreCase(anyString())).thenReturn(cliente2);
+    void obtenerClientesFiltrados_PassingBothNameAndId() {
         List<Cliente> nueva = new ArrayList<>(Collections.singletonList(cliente2));
-        when(clienteRepository.findByNombresLikeIgnoreCase(anyString())).thenReturn(nueva);
+        when(clienteRepository.getClientesFiltrados(anyString(),anyString())).thenReturn(nueva);
 
-        Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                clienteService.obtenerClientesConParam("Jane Doe","433434")
-        );
-        assertEquals("solo se permite ingresar nombre o numero de identificacion como parametro, no ambos al mismo tiempo", exception.getMessage());
+        ResponseEntity<?> results = clienteService.getClientesFiltrados(cliente2.getNombres(),cliente2.getNumeroIdentificacion());
+
+        assertEquals("Jane Doe", ((List<Cliente>)results.getBody()).get(0).getNombres());
+        assertEquals("1223478", ((List<Cliente>)results.getBody()).get(0).getNumeroIdentificacion());
 
     }
 
@@ -125,7 +116,7 @@ class ClienteServiceImplTest {
         when(clienteRepository.findAll()).thenReturn(listaclientes);
         when(clienteRepository.save(any(Cliente.class))).thenReturn(nuevo);
 
-        Cliente result =clienteService.nuevoCliente(new Cliente());
+        Cliente result =(Cliente)clienteService.nuevoCliente(new Cliente()).getBody();
         assertEquals(nuevo,result);
         verify(clienteRepository, times(1)).save(any(Cliente.class));
     }
@@ -136,81 +127,69 @@ class ClienteServiceImplTest {
         Cliente nuevo = new Cliente();
         nuevo.setNombres("pedro");
         nuevo.setId(96L);
-        nuevo.setTipoIdentificacion("CEDULA");
         nuevo.setNumeroIdentificacion("1223478");
-        nuevo.setDireccionMatriz(new Direccion(12L,"buenos aires","buenos aires","calle68"));
+        when(clienteRepository.getClientesFiltrados(any(),any())).thenReturn(listaclientes);
 
-        when(clienteRepository.findAll()).thenReturn(listaclientes);
-        when(clienteRepository.save(any(Cliente.class))).thenReturn(nuevo);
-
-        Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                clienteService.nuevoCliente(nuevo)
-                );
-        assertEquals("ya existe un cliente con ese numero de identificación", exception.getMessage());
+        ResponseEntity<?> results = clienteService.nuevoCliente(nuevo);
+        assertEquals(HttpStatus.BAD_REQUEST,results.getStatusCode());
+        assertEquals("ya existe un cliente con el numero de identificacion ingresado", results.getBody());
     }
 
     @Test
     void modificarCliente_WithValidID() {
-        when(clienteRepository.findAll()).thenReturn(listaclientes);
+        when(clienteRepository.getClientesFiltrados(any(),any())).thenReturn(listaclientes);
         when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente1));
-        String testname = "juan";
+        Cliente nuevo = new Cliente();
+        nuevo.setNombres(cliente1.getNombres());
+        nuevo.setTipoIdentificacion("CEDULA");
+        nuevo.setNumeroIdentificacion("1299078");
+        nuevo.setDireccionMatriz(new Direccion(12L,"buenos aires","buenos aires","calle68"));
+        when(clienteRepository.save(any(Cliente.class))).thenReturn(nuevo);
 
-        cliente1.setNombres(testname);
-        clienteService.modificarCliente(cliente1);
+        clienteService.modificarCliente(cliente1.getId(),cliente1);
 
-        assertEquals(testname,cliente1.getNombres());
-
+        assertEquals(nuevo.getNombres(),cliente1.getNombres());
+        verify(clienteRepository, times(1)).save(any(Cliente.class));
     }
 
     @Test
     void modificarCliente_WithExistingIDN() {
-        when(clienteRepository.findAll()).thenReturn(listaclientes);
-        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente1));
-        when(clienteRepository.findByNumeroIdentificacionLikeIgnoreCase(anyString())).thenReturn(cliente2);
 
+        when(clienteRepository.getClientesFiltrados(any(),any())).thenReturn(listaclientes);
+        when(clienteRepository.findById(anyLong())).thenReturn(Optional.of(cliente1));
         Cliente nuevo = new Cliente();
-        nuevo.setNombres("pedro");
-        nuevo.setId(96L);
+        nuevo.setNombres(cliente1.getNombres());
         nuevo.setTipoIdentificacion("CEDULA");
-        nuevo.setNumeroIdentificacion("90900");
+        nuevo.setNumeroIdentificacion(cliente2.getNumeroIdentificacion());
         nuevo.setDireccionMatriz(new Direccion(12L,"buenos aires","buenos aires","calle68"));
 
-        Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                clienteService.modificarCliente(nuevo)
-        );
-        assertEquals("ya existe un cliente con el numero de identificacion ingresado", exception.getMessage());
-
+        ResponseEntity<?> results = clienteService.modificarCliente(cliente1.getId(),nuevo);
+        assertEquals("ya existe un cliente con el numero de identificacion ingresado", results.getBody());
     }
 
     @Test
     void modificarCliente_PassingInvalidID() {
-        when(clienteRepository.findAll()).thenReturn(listaclientes);
+        when(clienteRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         Cliente nuevo = new Cliente();
         nuevo.setNombres("pedro");
-        nuevo.setId(288L);
-        nuevo.setTipoIdentificacion("CEDULA");
         nuevo.setNumeroIdentificacion("99999");
-        nuevo.setDireccionMatriz(new Direccion(12L,"buenos aires","buenos aires","calle68"));
 
-        Throwable exception = assertThrows(IllegalArgumentException.class, () ->
-                clienteService.modificarCliente(nuevo)
-        );
-        assertEquals("no existe un cliente con el ID ingresado", exception.getMessage());
-
+        ResponseEntity<?> results = clienteService.modificarCliente(nuevo.getId(),nuevo);
+        assertEquals("no existe un cliente con el ID ingresado", results.getBody());
     }
 
     @Test
     void eliminarCliente_WithValidID() {
-        when(clienteRepository.findAll()).thenReturn(listaclientes);
+        when(clienteRepository.findById(any())).thenReturn(Optional.ofNullable(cliente1));
         clienteService.eliminarCliente(cliente1.getId());
         verify(clienteRepository, times(1)).deleteById(cliente1.getId());
     }
     @Test
     void eliminarCliente_WithInvalidID() {
-        when(clienteRepository.findAll()).thenReturn(listaclientes);
+        when(clienteRepository.findById(any())).thenReturn(Optional.empty());
         clienteService.eliminarCliente(cliente3.getId());
-        var response = clienteService.eliminarCliente(cliente3.getId());
+        ResponseEntity<?> response= clienteService.eliminarCliente(cliente3.getId());
         assertEquals(HttpStatus.BAD_REQUEST,response.getStatusCode());
         assertEquals("no existe un cliente con el ID ingresado",response.getBody());
     }
