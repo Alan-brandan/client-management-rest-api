@@ -1,9 +1,10 @@
 <h1 align="center" id="title">🍃 Client Management System REST API 🍃</h1>
 
-<p id="description"> RESTful API for a client management system .developed with Spring Boot in Java.</p>
+<p id="description"> RESTful API for a client management system developed with Spring Boot in Java.</p>
   
 <h2>✨ Features</h2>
 
+*   Get a list of all clients
 *   Get a list of clients given a name or a ID number
 *   Create a new client with a main address
 *   Edit a client's attributes
@@ -33,26 +34,26 @@ spring.datasource.password=password
 <h2>🚀 Usage:</h2>
 
 ```bash
-# Return all registered clients
-GET /clientes
+# Get all registered clients
+GET /clientes/
 
-# Return a specific user by id
-GET /clientes/{id}
+# Get a specific user by id
+GET /clientes/?id={id}
 
-# Return a list of clients by name
-GET /clientes/{name}
+# Get a list of clients by name
+GET /clientes/?nombre={name}
 
 # Create a client
-POST /clientes
+POST /clientes/
 
-# Update a client
-PUT /clientes
+# Modify a client by id
+PUT /clientes/{id}
 
 # Delete a client by id
 DELETE /clientes/{id}
 ```
 ```bash
-# Return all registered addresses by client's id
+# Get all registered addresses by client's id
 GET /direcciones/{id}
 
 # Create an adittional address by client's id
